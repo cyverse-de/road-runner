@@ -17,8 +17,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/messaging.v4"
-	"gopkg.in/cyverse-de/model.v2"
+	"gopkg.in/cyverse-de/messaging.v6"
+	"gopkg.in/cyverse-de/model.v4"
 )
 
 // logrusProxyWriter will prevent
@@ -226,12 +226,11 @@ func (r *JobRunner) downloadInputs(ctx context.Context) (messaging.StatusCode, e
 	composePath := r.cfg.GetString("docker-compose.path")
 	if job.InputPathListFile != "" {
 		return r.downloadInputStep(ctx, "download_inputs", job.InputPathListFile, composePath, env)
-	} else {
-		for index, input := range r.job.Inputs() {
-			svcname := fmt.Sprintf("input_%d", index)
-			if status, err := r.downloadInputStep(ctx, svcname, input.IRODSPath(), composePath, env); err != nil {
-				return status, err
-			}
+	}
+	for index, input := range r.job.Inputs() {
+		svcname := fmt.Sprintf("input_%d", index)
+		if status, err := r.downloadInputStep(ctx, svcname, input.IRODSPath(), composePath, env); err != nil {
+			return status, err
 		}
 	}
 

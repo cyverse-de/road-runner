@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/model.v2"
+	"gopkg.in/cyverse-de/model.v4"
 )
 
 // WORKDIR is the path to the working directory inside all of the containers
@@ -29,6 +29,7 @@ const VOLUMEDIR = "workingvolume"
 const TMPDIR = "tmpfiles"
 
 const (
+	// UploadExcludesFilename is the file listing porklock upload exclusions
 	UploadExcludesFilename string = "porklock-upload-exclusions.txt"
 
 	// TypeLabel is the label key applied to every container.
@@ -83,6 +84,7 @@ type Service struct {
 	CapDrop       []string          `yaml:"cap_drop,flow"`
 	Command       []string          `yaml:",omitempty"`
 	ContainerName string            `yaml:"container_name,omitempty"`
+	CPUs          string            `yaml:"cpus,omitempty"`
 	CPUSet        string            `yaml:"cpuset,omitempty"`
 	CPUShares     int64             `yaml:"cpu_shares,omitempty"`
 	CPUQuota      string            `yaml:"cpu_quota,omitempty"`
@@ -132,7 +134,7 @@ func New(ld string, pathprefix string) (*JobCompose, error) {
 	}
 
 	return &JobCompose{
-		Version:  "2.1",
+		Version:  "2.2",
 		Volumes:  make(map[string]*Volume),
 		Networks: make(map[string]*Network),
 		Services: make(map[string]*Service),
@@ -200,9 +202,10 @@ func (j *JobCompose) InitFromJob(job *model.Job, cfg *viper.Viper, workingdir st
 		strings.Join([]string{excludesPath, excludesMount, "ro"}, ":"),
 	)
 
-	j.Services["upload_outputs"] = uploadOutputsSvc;
+	j.Services["upload_outputs"] = uploadOutputsSvc
 }
 
+// NewPorklockService generates a docker-compose service for porklock
 func NewPorklockService(containertype int, invocationID, workingVolumeHostPath, porklockImageName string, porklockCommand []string) *Service {
 	return &Service{
 		CapAdd:  []string{"IPC_LOCK"},
@@ -311,7 +314,9 @@ func (j *JobCompose) ConvertStep(step *model.Step, index int, user, invID, worki
 		svc.MemLimit = strconv.FormatInt(stepContainer.MemoryLimit, 10)
 	}
 
-	if stepContainer.CPUShares > 0 {
+	if stepContainer.MaxCPUCores > 0.0 {
+		svc.CPUs = fmt.Sprintf("%f", stepContainer.MaxCPUCores)
+	} else if stepContainer.CPUShares > 0 {
 		svc.CPUShares = stepContainer.CPUShares
 	}
 

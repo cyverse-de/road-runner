@@ -1,4 +1,5 @@
 #!groovy
+milestone 0
 node('docker') {
     slackJobDescription = "job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
     try {
@@ -14,8 +15,11 @@ node('docker') {
         echo descriptive_version
 
         dockerRepo = "test-${env.BUILD_TAG}"
+        dockerPushRepo = "${service.dockerUser}/${service.repo}:${env.BRANCH_NAME}"
 
-        sh "docker build --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepo} ."
+        milestone 50
+        sh "docker build --pull --cache-from=${dockerPushRepo} --rm --build-arg git_commit=${git_commit} --build-arg descriptive_version=${descriptive_version} -t ${dockerRepo} ."
+        milestone 51
 
         image_sha = sh(returnStdout: true, script: "docker inspect -f '{{ .Config.Image }}' ${dockerRepo}").trim()
         echo image_sha
@@ -30,15 +34,14 @@ node('docker') {
             stage "Test"
             try {
               sh "docker run --rm --name ${dockerTestRunner} --entrypoint 'sh' ${dockerRepo} -c \"go test -v github.com/cyverse-de/${service.repo} github.com/cyverse-de/${service.repo}/dcompose github.com/cyverse-de/${service.repo}/fs | tee /dev/stderr | go-junit-report\" > test-results.xml"
-
             } finally {
                 junit 'test-results.xml'
 
                 sh "docker run --rm --name ${dockerTestCleanup} -v \$(pwd):/build -w /build alpine rm -r test-results.xml"
             }
+
             milestone 100
             stage "Docker Push"
-            dockerPushRepo = "${service.dockerUser}/${service.repo}:${env.BRANCH_NAME}"
             lock("docker-push-${dockerPushRepo}") {
               milestone 101
               sh "docker tag ${dockerRepo} ${dockerPushRepo}"

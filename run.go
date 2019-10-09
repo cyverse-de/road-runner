@@ -141,40 +141,80 @@ func (r *JobRunner) Init() error {
 	return nil
 }
 
+// GetDockerCreds will obtain a list of Docker credentials for the current job. This function assumes that there will be
+// at most one set of credentials for each Docker registry. The result is a map from docker registry to credentials.
+func (r *JobRunner) getDockerCreds() (map[string]*authInfo, error) {
+	var result map[string]*authInfo
+
+	// Check each step in the job for credentials.
+	for _, step := range r.job.Steps {
+		container := step.Component.Container
+
+		// Add any credentials for the tool container.
+		if container.Image.Auth != "" {
+			repo := parseRepo(container.Image.Name)
+			creds, err := parse(container.Image.Auth)
+			if err != nil {
+				return nil, err
+			}
+			result[repo] = creds
+		}
+
+		// Add any credentials for data containers.
+		for _, dataContainer := range container.VolumesFrom {
+			if dataContainer.Auth != "" {
+				repo := parseRepo(dataContainer.Name)
+				creds, err := parse(dataContainer.Auth)
+				if err != nil {
+					return nil, err
+				}
+				result[repo] = creds
+			}
+		}
+	}
+
+	return result, nil
+}
+
 // DockerLogin will run "docker login" with credentials sent with the job.
 func (r *JobRunner) DockerLogin() error {
 	var err error
 	dockerBin := r.cfg.GetString("docker.path")
-	// Login so that images can be pulled.
-	var authinfo *authInfo
-	for _, img := range r.job.ContainerImages() {
-		if img.Auth != "" {
-			authinfo, err = parse(img.Auth)
-			if err != nil {
-				return err
-			}
-			authCommand := exec.Command(
-				dockerBin,
-				"login",
-				"--username",
-				authinfo.Username,
-				"--password",
-				authinfo.Password,
-				parseRepo(img.Name),
-			)
-			f, err := pty.Start(authCommand)
-			if err != nil {
-				return err
-			}
-			go func() {
-				io.Copy(logWriter, f)
-			}()
-			err = authCommand.Wait()
-			if err != nil {
-				return err
-			}
+
+	// Get credentials for each registry that requires authentication.
+	creds, err := r.getDockerCreds()
+	if err != nil {
+		return err
+	}
+
+	// Log in to the docker registres so that images can be pulled.
+	for registry, cred := range creds {
+		authCommand := exec.Command(
+			dockerBin,
+			"login",
+			"--username",
+			cred.Username,
+			"--password",
+			cred.Password,
+			registry,
+		)
+		f, err := pty.Start(authCommand)
+		if err != nil {
+			return err
+		}
+
+		// Copy any output from the login command to the log writer.
+		go func() {
+			io.Copy(logWriter, f)
+		}()
+
+		// Wait for the login command to exit.
+		err = authCommand.Wait()
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 

@@ -144,7 +144,7 @@ func (r *JobRunner) Init() error {
 // GetDockerCreds will obtain a list of Docker credentials for the current job. This function assumes that there will be
 // at most one set of credentials for each Docker registry. The result is a map from docker registry to credentials.
 func (r *JobRunner) getDockerCreds() (map[string]*authInfo, error) {
-	var result map[string]*authInfo
+	result := make(map[string]*authInfo)
 
 	// Check each step in the job for credentials.
 	for _, step := range r.job.Steps {

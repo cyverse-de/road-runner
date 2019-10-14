@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/cyverse-de/road-runner/dcompose"
 	"github.com/cyverse-de/road-runner/fs"
-	"github.com/kr/pty"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -199,20 +197,11 @@ func (r *JobRunner) DockerLogin(ctx context.Context) error {
 			cred.Password,
 			registry,
 		)
-		f, err := pty.Start(authCommand)
-		if err != nil {
-			return err
-		}
-
-		// Copy any output from the login command to the log writer.
-		go func() {
-			io.Copy(logWriter, f)
-		}()
-
-		// Wait for the login command to exit.
-		err = authCommand.Wait()
-		if err != nil {
-			return err
+		authCommand.Env = os.Environ()
+		authCommand.Stderr = logWriter
+		authCommand.Stdout = logWriter
+		if err = authCommand.Run(); err != nil {
+			return errors.Wrapf(err, "failed to log into Docker registry %s", registry)
 		}
 	}
 

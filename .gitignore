@@ -1,5 +1,6 @@
 road-runner
 test-configs/
+vendor/
 workingvolume/
 irods-config*
 .idea

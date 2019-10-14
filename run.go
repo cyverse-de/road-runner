@@ -177,7 +177,7 @@ func (r *JobRunner) getDockerCreds() (map[string]*authInfo, error) {
 }
 
 // DockerLogin will run "docker login" with credentials sent with the job.
-func (r *JobRunner) DockerLogin() error {
+func (r *JobRunner) DockerLogin(ctx context.Context) error {
 	var err error
 	dockerBin := r.cfg.GetString("docker.path")
 
@@ -189,7 +189,8 @@ func (r *JobRunner) DockerLogin() error {
 
 	// Log in to the docker registres so that images can be pulled.
 	for registry, cred := range creds {
-		authCommand := exec.Command(
+		authCommand := exec.CommandContext(
+			ctx,
 			dockerBin,
 			"login",
 			"--username",
@@ -473,7 +474,7 @@ func Run(ctx context.Context, client JobUpdatePublisher, job *model.Job, cfg *vi
 	// let everyone know the job is running
 	running(runner.client, runner.job, fmt.Sprintf("Job %s is running on host %s", runner.job.InvocationID, host))
 
-	if err = runner.DockerLogin(); err != nil {
+	if err = runner.DockerLogin(ctx); err != nil {
 		log.Error(err)
 	}
 

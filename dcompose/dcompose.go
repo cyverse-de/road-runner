@@ -219,8 +219,6 @@ func NewPorklockService(containertype int, invocationID, workingVolumeHostPath, 
 		Image:   porklockImageName,
 		Command: porklockCommand,
 		Environment: map[string]string{
-			"VAULT_ADDR":  "${VAULT_ADDR}",
-			"VAULT_TOKEN": "${VAULT_TOKEN}",
 			"JOB_UUID":    invocationID,
 		},
 		WorkingDir: WORKDIR,

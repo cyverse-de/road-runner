@@ -1,6 +1,10 @@
 package main
 
-import "gopkg.in/cyverse-de/model.v5"
+import (
+	"testing"
+
+	"gopkg.in/cyverse-de/model.v5"
+)
 
 var testJob = &model.Job{
 	ID:           "test-job-id",
@@ -58,27 +62,70 @@ var testJob = &model.Job{
 					Name: "container-name-1",
 					Image: model.ContainerImage{
 						ID:   "container-image-1",
-						Name: "container-image-name-1",
+						Name: "docker.example.com/container-image-name-1",
 						Tag:  "container-image-tag-1",
+						Auth: "eyJ1c2VybmFtZSI6InVzZXIxIiwicGFzc3dvcmQiOiJwYXNzd2QxIn0=",
 					},
 					VolumesFrom: []model.VolumesFrom{
 						{
 							Tag:           "tag1",
-							Name:          "name1",
+							Name:          "docker.example.org/name1",
+							Auth:          "eyJ1c2VybmFtZSI6InVzZXIxIiwicGFzc3dvcmQiOiJwYXNzd2QxIn0=",
 							HostPath:      "/host/path1",
 							ContainerPath: "/container/path1",
 						},
 						{
 							Tag:           "tag2",
-							Name:          "name2",
+							Name:          "docker.example.net/name2",
+							Auth:          "",
 							HostPath:      "/host/path2",
 							ContainerPath: "/container/path2",
+						},
+						{
+							Tag:           "tag3",
+							Name:          "docker.example.org/name3",
+							Auth:          "eyJ1c2VybmFtZSI6InVzZXIyIiwicGFzc3dvcmQiOiJwYXNzd2QyIn0=",
+							HostPath:      "/host/path3",
+							ContainerPath: "/container/path3",
 						},
 					},
 				},
 			},
 		},
 	},
+}
+
+func TestGetDockerCreds(t *testing.T) {
+	r, err := NewJobRunner(nil, testJob, nil, nil)
+	if err != nil {
+		t.Fatal("failed to instantiate the test job runner")
+	}
+
+	creds, err := r.getDockerCreds()
+	if err != nil {
+		t.Fatal("failed to get the Docker credentials from the job model")
+	}
+
+	comCreds := creds["docker.example.com"]
+	if comCreds.Username != "user1" {
+		t.Errorf("unexpected username for docker.example.com: %s", comCreds.Username)
+	}
+	if comCreds.Password != "passwd1" {
+		t.Errorf("unexpected password for docker.example.com: %s", comCreds.Password)
+	}
+
+	orgCreds := creds["docker.example.org"]
+	if orgCreds.Username != "user2" {
+		t.Errorf("unexpected username for docker.example.org: %s", orgCreds.Username)
+	}
+	if orgCreds.Password != "passwd2" {
+		t.Errorf("unexpected password for docker.example.org: %s", orgCreds.Password)
+	}
+
+	netCreds := creds["docker.example.net"]
+	if netCreds != nil {
+		t.Error("found unexpected credentials for docker.example.net")
+	}
 }
 
 // func TestDownloadInputs(t *testing.T) {

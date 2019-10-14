@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/cyverse-de/road-runner/dcompose"
 	"github.com/cyverse-de/road-runner/fs"
-	"github.com/kr/pty"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -141,40 +139,72 @@ func (r *JobRunner) Init() error {
 	return nil
 }
 
-// DockerLogin will run "docker login" with credentials sent with the job.
-func (r *JobRunner) DockerLogin() error {
-	var err error
-	dockerBin := r.cfg.GetString("docker.path")
-	// Login so that images can be pulled.
-	var authinfo *authInfo
-	for _, img := range r.job.ContainerImages() {
-		if img.Auth != "" {
-			authinfo, err = parse(img.Auth)
+// GetDockerCreds will obtain a list of Docker credentials for the current job. This function assumes that there will be
+// at most one set of credentials for each Docker registry. The result is a map from docker registry to credentials.
+func (r *JobRunner) getDockerCreds() (map[string]*authInfo, error) {
+	result := make(map[string]*authInfo)
+
+	// Check each step in the job for credentials.
+	for _, step := range r.job.Steps {
+		container := step.Component.Container
+
+		// Add any credentials for the tool container.
+		if container.Image.Auth != "" {
+			repo := parseRepo(container.Image.Name)
+			creds, err := parse(container.Image.Auth)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			authCommand := exec.Command(
-				dockerBin,
-				"login",
-				"--username",
-				authinfo.Username,
-				"--password",
-				authinfo.Password,
-				parseRepo(img.Name),
-			)
-			f, err := pty.Start(authCommand)
-			if err != nil {
-				return err
-			}
-			go func() {
-				io.Copy(logWriter, f)
-			}()
-			err = authCommand.Wait()
-			if err != nil {
-				return err
+			result[repo] = creds
+		}
+
+		// Add any credentials for data containers.
+		for _, dataContainer := range container.VolumesFrom {
+			if dataContainer.Auth != "" {
+				repo := parseRepo(dataContainer.Name)
+				creds, err := parse(dataContainer.Auth)
+				if err != nil {
+					return nil, err
+				}
+				result[repo] = creds
 			}
 		}
 	}
+
+	return result, nil
+}
+
+// DockerLogin will run "docker login" with credentials sent with the job.
+func (r *JobRunner) DockerLogin(ctx context.Context) error {
+	var err error
+	dockerBin := r.cfg.GetString("docker.path")
+
+	// Get credentials for each registry that requires authentication.
+	creds, err := r.getDockerCreds()
+	if err != nil {
+		return err
+	}
+
+	// Log in to the docker registres so that images can be pulled.
+	for registry, cred := range creds {
+		authCommand := exec.CommandContext(
+			ctx,
+			dockerBin,
+			"login",
+			"--username",
+			cred.Username,
+			"--password",
+			cred.Password,
+			registry,
+		)
+		authCommand.Env = os.Environ()
+		authCommand.Stderr = logWriter
+		authCommand.Stdout = logWriter
+		if err = authCommand.Run(); err != nil {
+			return errors.Wrapf(err, "failed to log into Docker registry %s", registry)
+		}
+	}
+
 	return nil
 }
 
@@ -427,7 +457,7 @@ func Run(ctx context.Context, client JobUpdatePublisher, job *model.Job, cfg *vi
 	// let everyone know the job is running
 	running(runner.client, runner.job, fmt.Sprintf("Job %s is running on host %s", runner.job.InvocationID, host))
 
-	if err = runner.DockerLogin(); err != nil {
+	if err = runner.DockerLogin(ctx); err != nil {
 		log.Error(err)
 	}
 

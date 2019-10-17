@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/messaging.v6"
+	"gopkg.in/cyverse-de/messaging.v8"
 )
 
 func cleanup(cfg *viper.Viper) {

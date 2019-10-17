@@ -28,8 +28,8 @@ require (
 	golang.org/x/crypto v0.0.0-20170508154713-122d919ec1ef // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/cyverse-de/messaging.v6 v6.0.0
-	gopkg.in/cyverse-de/model.v4 v4.0.0-20180918203245-51f67b05d6a6
+	gopkg.in/cyverse-de/messaging.v8 v8.0.0-20191010232913-f26ca4e7b4b5
+	gopkg.in/cyverse-de/model.v5 v5.0.0-20191010231803-604796c0f9ba
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )

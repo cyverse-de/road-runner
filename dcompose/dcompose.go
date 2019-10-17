@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/model.v4"
+	"gopkg.in/cyverse-de/model.v5"
 )
 
 // WORKDIR is the path to the working directory inside all of the containers
@@ -19,6 +19,9 @@ const WORKDIR = "/de-app-work"
 // CONFIGDIR is the path to the local configs inside the containers that are
 // used to transfer files into and out of the job.
 const CONFIGDIR = "/configs"
+
+// IRODSCONFIGNAME is the basename of the irods config file
+const IRODSCONFIGNAME = "irods-config"
 
 // VOLUMEDIR is the name of the directory that is used for the working directory
 // volume.
@@ -146,6 +149,7 @@ func New(ld string, pathprefix string) (*JobCompose, error) {
 func (j *JobCompose) InitFromJob(job *model.Job, cfg *viper.Viper, workingdir string) {
 	// The host path for the working directory volume mount
 	workingVolumeHostPath := path.Join(workingdir, VOLUMEDIR)
+	irodsConfigPath := path.Join(workingdir, IRODSCONFIGNAME)
 
 	porklockImage := cfg.GetString("porklock.image")
 	porklockTag := cfg.GetString("porklock.tag")
@@ -159,6 +163,7 @@ func (j *JobCompose) InitFromJob(job *model.Job, cfg *viper.Viper, workingdir st
 			InputContainer,
 			job.InvocationID,
 			workingVolumeHostPath,
+			irodsConfigPath,
 			porklockImageName,
 			job.InputSourceListArguments(inputPathListMount),
 		)
@@ -175,6 +180,7 @@ func (j *JobCompose) InitFromJob(job *model.Job, cfg *viper.Viper, workingdir st
 				InputContainer,
 				job.InvocationID,
 				workingVolumeHostPath,
+				irodsConfigPath,
 				porklockImageName,
 				input.Arguments(job.Submitter, job.FileMetadata),
 			)
@@ -194,6 +200,7 @@ func (j *JobCompose) InitFromJob(job *model.Job, cfg *viper.Viper, workingdir st
 		OutputContainer,
 		job.InvocationID,
 		workingVolumeHostPath,
+		irodsConfigPath,
 		porklockImageName,
 		job.FinalOutputArguments(excludesMount),
 	)
@@ -206,19 +213,18 @@ func (j *JobCompose) InitFromJob(job *model.Job, cfg *viper.Viper, workingdir st
 }
 
 // NewPorklockService generates a docker-compose service for porklock
-func NewPorklockService(containertype int, invocationID, workingVolumeHostPath, porklockImageName string, porklockCommand []string) *Service {
+func NewPorklockService(containertype int, invocationID, workingVolumeHostPath, irodsConfigPath, porklockImageName string, porklockCommand []string) *Service {
 	return &Service{
 		CapAdd:  []string{"IPC_LOCK"},
 		Image:   porklockImageName,
 		Command: porklockCommand,
 		Environment: map[string]string{
-			"VAULT_ADDR":  "${VAULT_ADDR}",
-			"VAULT_TOKEN": "${VAULT_TOKEN}",
 			"JOB_UUID":    invocationID,
 		},
 		WorkingDir: WORKDIR,
 		Volumes: []string{
 			strings.Join([]string{workingVolumeHostPath, WORKDIR, "rw"}, ":"),
+			strings.Join([]string{irodsConfigPath, path.Join(CONFIGDIR, IRODSCONFIGNAME), "ro"}, ":"),
 		},
 		Labels: map[string]string{
 			model.DockerLabelKey: invocationID,

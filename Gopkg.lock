@@ -31,17 +31,7 @@
 
 [[projects]]
   name = "github.com/hashicorp/hcl"
-  packages = [
-    ".",
-    "hcl/ast",
-    "hcl/parser",
-    "hcl/scanner",
-    "hcl/strconv",
-    "hcl/token",
-    "json/parser",
-    "json/scanner",
-    "json/token"
-  ]
+  packages = [".","hcl/ast","hcl/parser","hcl/printer","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
   revision = "392dba7d905ed5d04a5794ba89f558b27e2ba1ca"
 
 [[projects]]
@@ -83,10 +73,7 @@
 
 [[projects]]
   name = "github.com/spf13/afero"
-  packages = [
-    ".",
-    "mem"
-  ]
+  packages = [".","mem"]
   revision = "9be650865eab0c12963d8753212f4f9c66cdcf12"
 
 [[projects]]
@@ -109,7 +96,8 @@
 [[projects]]
   name = "github.com/spf13/viper"
   packages = ["."]
-  revision = "0967fc9aceab2ce9da34061253ac10fb99bba5b2"
+  revision = "b5bf975e5823809fb22c7644d008757f78a4259e"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
@@ -129,27 +117,20 @@
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = [
-    "internal/gen",
-    "internal/triegen",
-    "internal/ucd",
-    "transform",
-    "unicode/cldr",
-    "unicode/norm"
-  ]
+  packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
   revision = "19e51611da83d6be54ddafce4a4af510cb3e9ea4"
 
 [[projects]]
-  name = "gopkg.in/cyverse-de/messaging.v6"
+  name = "gopkg.in/cyverse-de/messaging.v8"
   packages = ["."]
-  revision = "75e35ff8f1eb7027ead7ac9f1fdb5d0a51ed2bf4"
-  version = "v6"
+  revision = "f26ca4e7b4b5ea4f89911adba42f19b3d25bfe8e"
+  version = "v8.0"
 
 [[projects]]
-  name = "gopkg.in/cyverse-de/model.v4"
+  name = "gopkg.in/cyverse-de/model.v5"
   packages = ["."]
-  revision = "51f67b05d6a692a14a233651ef2f5d49d1323133"
-  version = "v4.1"
+  revision = "604796c0f9ba0293cab5632307a0b3d83df39e8b"
+  version = "v5.0"
 
 [[projects]]
   branch = "v2"
@@ -160,6 +141,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ba59b971ae4e6b245a0b4dae4f77077066c0e9f05775a697f2cda96137b9ac1c"
+  inputs-digest = "5037a12e0fb6f6903820b382490a4f78d9823d60d8705b15322c533bbf5815c1"
   solver-name = "gps-cdcl"
   solver-version = 1

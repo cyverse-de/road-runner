@@ -15,8 +15,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/messaging.v6"
-	"gopkg.in/cyverse-de/model.v4"
+	"gopkg.in/cyverse-de/messaging.v8"
+	"gopkg.in/cyverse-de/model.v5"
 )
 
 // logrusProxyWriter will prevent
@@ -251,8 +251,6 @@ func (r *JobRunner) createDataContainers(ctx context.Context) (messaging.StatusC
 
 func (r *JobRunner) downloadInputs(ctx context.Context) (messaging.StatusCode, error) {
 	env := os.Environ()
-	env = append(env, fmt.Sprintf("VAULT_ADDR=%s", r.cfg.GetString("vault.url")))
-	env = append(env, fmt.Sprintf("VAULT_TOKEN=%s", r.cfg.GetString("vault.token")))
 	composePath := r.cfg.GetString("docker-compose.path")
 	if job.InputPathListFile != "" {
 		return r.downloadInputStep(ctx, "download_inputs", job.InputPathListFile, composePath, env)
@@ -415,10 +413,6 @@ func (r *JobRunner) uploadOutputs() (messaging.StatusCode, error) {
 		"--exit-code-from", "upload_outputs",
 		"upload_outputs",
 	)
-	outputCommand.Env = []string{
-		fmt.Sprintf("VAULT_ADDR=%s", r.cfg.GetString("vault.url")),
-		fmt.Sprintf("VAULT_TOKEN=%s", r.cfg.GetString("vault.token")),
-	}
 	outputCommand.Stdout = stdout
 	outputCommand.Stderr = stderr
 	err = outputCommand.Run()

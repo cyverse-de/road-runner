@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"gopkg.in/cyverse-de/messaging.v8"
-	"gopkg.in/cyverse-de/model.v5"
+	"github.com/cyverse-de/messaging"
+	"github.com/cyverse-de/model"
 )
 
 type TestJobUpdatePublisher struct {

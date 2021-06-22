@@ -3,9 +3,16 @@ package main
 import (
 	"os"
 
-	"gopkg.in/cyverse-de/messaging.v8"
-	"gopkg.in/cyverse-de/model.v5"
+	"github.com/cyverse-de/messaging"
+	"github.com/cyverse-de/model"
 )
+
+func jobDetailsFromJob(job *model.Job) messaging.JobDetails {
+	return messaging.JobDetails{
+		InvocationID: job.InvocationID,
+		CondorID:     job.CondorID,
+	}
+}
 
 func hostname() string {
 	h, err := os.Hostname()
@@ -19,7 +26,7 @@ func hostname() string {
 func fail(client JobUpdatePublisher, job *model.Job, msg string) error {
 	log.Error(msg)
 	return client.PublishJobUpdate(&messaging.UpdateMessage{
-		Job:     job,
+		Job:     jobDetailsFromJob(job),
 		State:   messaging.FailedState,
 		Message: msg,
 		Sender:  hostname(),
@@ -29,7 +36,7 @@ func fail(client JobUpdatePublisher, job *model.Job, msg string) error {
 func success(client JobUpdatePublisher, job *model.Job) error {
 	log.Info("Job success")
 	return client.PublishJobUpdate(&messaging.UpdateMessage{
-		Job:    job,
+		Job:    jobDetailsFromJob(job),
 		State:  messaging.SucceededState,
 		Sender: hostname(),
 	})
@@ -37,7 +44,7 @@ func success(client JobUpdatePublisher, job *model.Job) error {
 
 func running(client JobUpdatePublisher, job *model.Job, msg string) {
 	err := client.PublishJobUpdate(&messaging.UpdateMessage{
-		Job:     job,
+		Job:     jobDetailsFromJob(job),
 		State:   messaging.RunningState,
 		Message: msg,
 		Sender:  hostname(),

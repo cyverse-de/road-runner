@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"gopkg.in/cyverse-de/model.v5"
+	"github.com/cyverse-de/model"
 )
 
 var testJob = &model.Job{

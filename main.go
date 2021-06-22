@@ -20,6 +20,8 @@ import (
 
 	"github.com/cyverse-de/configurate"
 	"github.com/cyverse-de/logcabin"
+	"github.com/cyverse-de/messaging"
+	"github.com/cyverse-de/model"
 	"github.com/cyverse-de/road-runner/dcompose"
 	"github.com/cyverse-de/road-runner/fs"
 	"github.com/cyverse-de/version"
@@ -27,8 +29,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/streadway/amqp"
-	"gopkg.in/cyverse-de/messaging.v8"
-	"gopkg.in/cyverse-de/model.v5"
 )
 
 var (

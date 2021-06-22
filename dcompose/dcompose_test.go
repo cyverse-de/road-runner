@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gopkg.in/cyverse-de/model.v5"
+	"github.com/cyverse-de/model"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -50,13 +50,61 @@ var testJob = &model.Job{
 						ID:    "step-param-1",
 						Name:  "step-param-name-1",
 						Value: "step-param-value-1",
-						Order: 0,
+						Order: 1,
+					},
+					{
+						ID:    "step-param-3",
+						Name:  "step-param-name-3",
+						Value: "step-param-value-3",
+						Order: 3,
+					},
+					{
+						ID:    "step-param-4",
+						Name:  "step-param-name-4",
+						Value: "step-param-value-4",
+						Order: 3,
+					},
+					{
+						ID:    "step-param-5",
+						Name:  "step-param-name-5",
+						Value: "step-param-value-5",
+						Order: 3,
+					},
+					{
+						ID:    "step-param-6",
+						Name:  "step-param-name-6",
+						Value: "step-param-value-6",
+						Order: 3,
+					},
+					{
+						ID:    "step-param-7",
+						Name:  "step-param-name-7",
+						Value: "step-param-value-7",
+						Order: 3,
+					},
+					{
+						ID:    "step-param-8",
+						Name:  "step-param-name-8",
+						Value: "step-param-value-8",
+						Order: 3,
+					},
+					{
+						ID:    "step-param-9",
+						Name:  "step-param-name-9",
+						Value: "step-param-value-9",
+						Order: 3,
 					},
 					{
 						ID:    "step-param-2",
 						Name:  "step-param-name-2",
 						Value: "step-param-value-2",
 						Order: 1,
+					},
+					{
+						ID:    "step-param-0",
+						Name:  "step-param-name-0",
+						Value: "step-param-value-0",
+						Order: 0,
 					},
 				},
 			},
@@ -377,7 +425,17 @@ func TestConvertStep(t *testing.T) {
 		t.Errorf("PIDsLimit was %d, expecting 64", svc.PIDsLimit)
 	}
 
-	if !reflect.DeepEqual(svc.Command, []string{"step-param-name-1", "step-param-value-1", "step-param-name-2", "step-param-value-2"}) {
+	if !reflect.DeepEqual(svc.Command, []string{
+		"step-param-name-0", "step-param-value-0",
+		"step-param-name-1", "step-param-value-1",
+		"step-param-name-2", "step-param-value-2",
+		"step-param-name-3", "step-param-value-3",
+		"step-param-name-4", "step-param-value-4",
+		"step-param-name-5", "step-param-value-5",
+		"step-param-name-6", "step-param-value-6",
+		"step-param-name-7", "step-param-value-7",
+		"step-param-name-8", "step-param-value-8",
+		"step-param-name-9", "step-param-value-9"}) {
 		t.Errorf("command was %#v", svc.Command)
 	}
 }

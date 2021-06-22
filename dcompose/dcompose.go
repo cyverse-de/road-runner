@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cyverse-de/model"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/model.v5"
 )
 
 // WORKDIR is the path to the working directory inside all of the containers
@@ -219,7 +219,7 @@ func NewPorklockService(containertype int, invocationID, workingVolumeHostPath, 
 		Image:   porklockImageName,
 		Command: porklockCommand,
 		Environment: map[string]string{
-			"JOB_UUID":    invocationID,
+			"JOB_UUID": invocationID,
 		},
 		WorkingDir: WORKDIR,
 		Volumes: []string{

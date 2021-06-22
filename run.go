@@ -10,13 +10,13 @@ import (
 	"path"
 	"strings"
 
+	"github.com/cyverse-de/messaging"
+	"github.com/cyverse-de/model"
 	"github.com/cyverse-de/road-runner/dcompose"
 	"github.com/cyverse-de/road-runner/fs"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/cyverse-de/messaging.v8"
-	"gopkg.in/cyverse-de/model.v5"
 )
 
 // logrusProxyWriter will prevent

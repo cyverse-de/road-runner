@@ -383,10 +383,10 @@ func TestNew(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if jc == nil {
+	if jc == nil { // nolint:staticcheck
 		t.Error("New() returned nil")
 	}
-	if jc.Version != "2.2" {
+	if jc.Version != "2.2" { // nolint:staticcheck
 		t.Errorf("version was %s", jc.Version)
 	}
 }

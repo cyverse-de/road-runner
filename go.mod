@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/cyverse-de/configurate v0.0.0-20190318152107-8f767cb828d9
-	github.com/cyverse-de/logcabin v0.0.0-20170404195257-5cd4eb61491e
 	github.com/cyverse-de/messaging v8.2.0+incompatible
 	github.com/cyverse-de/model v0.0.0-20210619020207-17421683a8dd
 	github.com/cyverse-de/version v0.0.0-20170404194946-4ba7220a66d3

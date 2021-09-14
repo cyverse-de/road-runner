@@ -29,7 +29,7 @@ type logrusProxyWriter struct {
 }
 
 func (w *logrusProxyWriter) Write(b []byte) (int, error) {
-	return fmt.Fprintf(w.entry.Writer(), string(b))
+	return fmt.Fprint(w.entry.Writer(), string(b))
 }
 
 var logWriter = &logrusProxyWriter{
@@ -393,12 +393,12 @@ func (r *JobRunner) runAllSteps(ctx context.Context) (messaging.StatusCode, erro
 func (r *JobRunner) uploadOutputs() (messaging.StatusCode, error) {
 	var err error
 	composePath := r.cfg.GetString("docker-compose.path")
-	stdout, err := os.Create(path.Join(r.logsDir, fmt.Sprintf("logs-stdout-output")))
+	stdout, err := os.Create(path.Join(r.logsDir, "logs-stdout-output"))
 	if err != nil {
 		log.Error(err)
 	}
 	defer stdout.Close()
-	stderr, err := os.Create(path.Join(r.logsDir, fmt.Sprintf("logs-stderr-output")))
+	stderr, err := os.Create(path.Join(r.logsDir, "logs-stderr-output"))
 	if err != nil {
 		log.Error(err)
 	}
@@ -528,9 +528,13 @@ func Run(ctx context.Context, client JobUpdatePublisher, job *model.Job, cfg *vi
 	}
 	// Always inform upstream of the job status.
 	if runner.status != messaging.Success {
-		fail(runner.client, runner.job, fmt.Sprintf("Job exited with a status of %d", runner.status))
+		err = fail(runner.client, runner.job, fmt.Sprintf("Job exited with a status of %d", runner.status))
+
 	} else {
-		success(runner.client, runner.job)
+		err = success(runner.client, runner.job)
+	}
+	if err != nil {
+		log.Error(err)
 	}
 	exit <- runner.status
 }

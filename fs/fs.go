@@ -168,9 +168,7 @@ func WriteJobParameters(fs FileSystem, outputDir string, job *model.Job) error {
 	}
 	for _, s := range job.Steps {
 		stepRecords := stepToRecord(&s)
-		for _, sr := range stepRecords {
-			records = append(records, sr)
-		}
+		records = append(records, stepRecords...)
 	}
 	return WriteCSV(fileWriter, records)
 }

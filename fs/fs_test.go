@@ -91,7 +91,10 @@ func TestCopyJobFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c.Write([]byte("this is a test"))
+	_, err = c.Write([]byte("this is a test"))
+	if err != nil {
+		t.Error(err)
+	}
 	to := "/tmp"
 	err = CopyJobFile(tfs, uuid, from, to)
 	if err != nil {
@@ -116,7 +119,10 @@ func TestCopyJobFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c.Write([]byte("this is a test"))
+	_, err = c.Write([]byte("this is a test"))
+	if err != nil {
+		t.Error(err)
+	}
 	tfs.failCreate = true
 	err = CopyJobFile(tfs, uuid, from, to)
 	if err == nil {
@@ -129,7 +135,10 @@ func TestCopyJobFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c.Write([]byte("this is a test"))
+	_, err = c.Write([]byte("this is a test"))
+	if err != nil {
+		t.Error(err)
+	}
 	tfs.failFile = true
 	err = CopyJobFile(tfs, uuid, from, to)
 	if err == nil {
@@ -145,13 +154,19 @@ func TestDeleteJobFile(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c.Write([]byte("this is a test"))
+	_, err = c.Write([]byte("this is a test"))
+	if err != nil {
+		t.Error(err)
+	}
 	to := "/tmp"
 	err = CopyJobFile(tfs, uuid, from, to)
 	if err != nil {
 		t.Error(err)
 	}
-	DeleteJobFile(tfs, uuid, to)
+	err = DeleteJobFile(tfs, uuid, to)
+	if err != nil {
+		t.Error(err)
+	}
 	tmpPath := path.Join(to, fmt.Sprintf("%s.json", uuid))
 	if _, err := os.Open(tmpPath); err == nil {
 		t.Errorf("tmpPath %s existed after deleteJobFile() was called", tmpPath)
@@ -167,7 +182,10 @@ func TestDeleteJobFileFail(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c.Write([]byte("this is a test"))
+	_, err = c.Write([]byte("this is a test"))
+	if err != nil {
+		t.Error(err)
+	}
 	to := "/tmp"
 	err = CopyJobFile(tfs, uuid, from, to)
 	if err != nil {
@@ -193,7 +211,7 @@ test2,test2,test2
 	if err := WriteCSV(buf, records); err != nil {
 		t.Error(err)
 	}
-	actual := string(buf.Bytes())
+	actual := buf.String()
 	if actual != expected {
 		t.Errorf("Contents of csv were:\n%s\n\tinstead of:\n%s\n", actual, expected)
 	}

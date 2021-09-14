@@ -19,7 +19,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/cyverse-de/configurate"
-	"github.com/cyverse-de/logcabin"
 	"github.com/cyverse-de/messaging"
 	"github.com/cyverse-de/model"
 	"github.com/cyverse-de/road-runner/dcompose"
@@ -87,8 +86,6 @@ func main() {
 		cfg         *viper.Viper
 	)
 
-	logcabin.Init("road-runner", "road-runner")
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	sigquitter := make(chan bool)
@@ -104,7 +101,10 @@ func main() {
 				cancel()
 
 				if client != nil {
-					fail(client, job, fmt.Sprintf("Received signal %s", sig))
+					err := fail(client, job, fmt.Sprintf("Received signal %s", sig))
+					if err != nil {
+						log.Info(err)
+					}
 				}
 			}
 		},
@@ -115,11 +115,10 @@ func main() {
 	signal.Notify(
 		sighandler.Signals,
 		os.Interrupt,
-		os.Kill,
 		syscall.SIGTERM,
-		syscall.SIGSTOP,
 		syscall.SIGQUIT,
 	)
+	// os.Kill and syscall.SIGSTOP cannot be trapped
 
 	flag.Parse()
 
@@ -201,7 +200,10 @@ func main() {
 
 	// Configured the AMQP client so we can publish messages such as the job
 	// status updates.
-	client.SetupPublishing(amqpExchangeName)
+	err = client.SetupPublishing(amqpExchangeName)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Generate the docker-compose file used to execute the job.
 	composer, err := dcompose.New(*logdriver, *pathprefix)
@@ -254,7 +256,10 @@ func main() {
 		messaging.StopQueueName(job.InvocationID),
 		messaging.StopRequestKey(job.InvocationID),
 		func(d amqp.Delivery) {
-			d.Ack(false)
+			err := d.Ack(false)
+			if err != nil {
+				log.Info(err)
+			}
 			running(client, job, "Received stop request")
 			cancel()
 		},

@@ -132,9 +132,7 @@ func New(ld string, pathprefix string) (*JobCompose, error) {
 
 	logdriver = ld
 	hostworkingdir = strings.TrimPrefix(wd, pathprefix)
-	if strings.HasPrefix(hostworkingdir, "/") {
-		hostworkingdir = strings.TrimPrefix(hostworkingdir, "/")
-	}
+	hostworkingdir = strings.TrimPrefix(hostworkingdir, "/")
 
 	return &JobCompose{
 		Version:  "2.2",

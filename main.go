@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -156,7 +156,11 @@ func main() {
 	}
 
 	// Read in the job definition from the path passed in on the command-line
-	data, err := ioutil.ReadFile(*jobFile)
+	f, err := os.Open(*jobFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	data, err := io.ReadAll(f)
 	if err != nil {
 		log.Fatal(err)
 	}

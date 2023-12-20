@@ -461,19 +461,6 @@ func Run(ctx context.Context, client JobUpdatePublisher, job *model.Job, cfg *vi
 		log.Error(err)
 	}
 
-	networkName := fmt.Sprintf("%s_default", runner.projectName)
-	dockerPath := cfg.GetString("docker.path")
-	networkCreateCmd := exec.CommandContext(ctx, dockerPath, "network", "create", "--driver", "bridge", networkName)
-	networkCreateCmd.Env = os.Environ()
-	networkCreateCmd.Dir = runner.workingDir
-	networkCreateCmd.Stdout = logWriter
-	networkCreateCmd.Stderr = logWriter
-
-	err = networkCreateCmd.Run()
-	if err != nil {
-		log.Error(err) // don't need to fail, since docker-compose is *supposed* to create the network
-	}
-
 	composePath := cfg.GetString("docker-compose.path")
 	pullCommand := exec.CommandContext(ctx, composePath, "-p", runner.projectName, "-f", "docker-compose.yml", "pull", "--parallel")
 	pullCommand.Env = os.Environ()

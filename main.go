@@ -145,6 +145,13 @@ func main() {
 		log.Fatal("--job must be set.")
 	}
 
+	// Set the PATH environment variable to a reasonable default if it's empty.
+	path := os.Getenv("PATH")
+	if path == "" {
+		log.Info("defaulting PATH to `/usr/bin:/usr/local/bin")
+		os.Setenv("PATH", "/usr/bin:/usr/local/bin")
+	}
+
 	dockerBinPath, err := exec.LookPath("docker")
 	if err != nil {
 		log.Fatal("no docker executable found in path")

@@ -9,17 +9,12 @@ import (
 
 // Creates a command that can be used to run docker-compose.
 func DockerComposeCommand(cfg *viper.Viper, args ...string) *exec.Cmd {
-	dockerComposePath := cfg.GetString("docker-compose.path")
-	if dockerComposePath != "" {
-		return exec.Command(dockerComposePath, args...)
-	}
-	return DockerCommand(cfg, append([]string{"compose"}, args...)...)
+	return DockerComposeCommandContext(cfg, context.Background(), args...)
 }
 
 // Creates a command that can be used to run docker.
 func DockerCommand(cfg *viper.Viper, args ...string) *exec.Cmd {
-	dockerPath := cfg.GetString("docker.path")
-	return exec.Command(dockerPath, args...)
+	return DockerCommandContext(cfg, context.Background(), args...)
 }
 
 // Creates a command that can be used to run docker-compose in a context.

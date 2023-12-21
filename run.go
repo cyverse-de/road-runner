@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 
@@ -177,7 +176,6 @@ func (r *JobRunner) getDockerCreds() (map[string]*authInfo, error) {
 // DockerLogin will run "docker login" with credentials sent with the job.
 func (r *JobRunner) DockerLogin(ctx context.Context) error {
 	var err error
-	dockerBin := r.cfg.GetString("docker.path")
 
 	// Get credentials for each registry that requires authentication.
 	creds, err := r.getDockerCreds()
@@ -187,9 +185,9 @@ func (r *JobRunner) DockerLogin(ctx context.Context) error {
 
 	// Log in to the docker registres so that images can be pulled.
 	for registry, cred := range creds {
-		authCommand := exec.CommandContext(
+		authCommand := DockerCommandContext(
+			r.cfg,
 			ctx,
-			dockerBin,
 			"login",
 			"--username",
 			cred.Username,
@@ -218,14 +216,13 @@ func (r *JobRunner) createDataContainers(ctx context.Context) (messaging.StatusC
 	var (
 		err error
 	)
-	composePath := r.cfg.GetString("docker-compose.path")
 	for stepIndex, step := range r.job.Steps {
 		for dcIndex := range step.Component.Container.VolumesFrom {
 			svcname := fmt.Sprintf("data_%d_%d", stepIndex, dcIndex)
 			running(r.client, r.job, fmt.Sprintf("creating data container %s", svcname))
-			dataCommand := exec.CommandContext(
+			dataCommand := DockerComposeCommandContext(
+				r.cfg,
 				ctx,
-				composePath,
 				"-p",
 				r.projectName,
 				"-f",
@@ -251,13 +248,12 @@ func (r *JobRunner) createDataContainers(ctx context.Context) (messaging.StatusC
 
 func (r *JobRunner) downloadInputs(ctx context.Context) (messaging.StatusCode, error) {
 	env := os.Environ()
-	composePath := r.cfg.GetString("docker-compose.path")
 	if job.InputPathListFile != "" {
-		return r.downloadInputStep(ctx, "download_inputs", job.InputPathListFile, composePath, env)
+		return r.downloadInputStep(ctx, "download_inputs", job.InputPathListFile, env)
 	}
 	for index, input := range r.job.Inputs() {
 		svcname := fmt.Sprintf("input_%d", index)
-		if status, err := r.downloadInputStep(ctx, svcname, input.IRODSPath(), composePath, env); err != nil {
+		if status, err := r.downloadInputStep(ctx, svcname, input.IRODSPath(), env); err != nil {
 			return status, err
 		}
 	}
@@ -265,7 +261,7 @@ func (r *JobRunner) downloadInputs(ctx context.Context) (messaging.StatusCode, e
 	return messaging.Success, nil
 }
 
-func (r *JobRunner) downloadInputStep(ctx context.Context, svcname, inputPath, composePath string, env []string) (messaging.StatusCode, error) {
+func (r *JobRunner) downloadInputStep(ctx context.Context, svcname, inputPath string, env []string) (messaging.StatusCode, error) {
 	var (
 		exitCode int64
 	)
@@ -280,9 +276,9 @@ func (r *JobRunner) downloadInputStep(ctx context.Context, svcname, inputPath, c
 		log.Error(err)
 	}
 	defer stdout.Close()
-	downloadCommand := exec.CommandContext(
+	downloadCommand := DockerComposeCommandContext(
+		r.cfg,
 		ctx,
-		composePath,
 		"-p", r.projectName,
 		"-f", "docker-compose.yml",
 		"up",
@@ -345,11 +341,10 @@ func (r *JobRunner) runAllSteps(ctx context.Context) (messaging.StatusCode, erro
 		}
 		defer stderr.Close()
 
-		composePath := r.cfg.GetString("docker-compose.path")
 		svcname := fmt.Sprintf("step_%d", idx)
-		runCommand := exec.CommandContext(
+		runCommand := DockerComposeCommandContext(
+			r.cfg,
 			ctx,
-			composePath,
 			"-p", r.projectName,
 			"-f", "docker-compose.yml",
 			"up",
@@ -392,7 +387,6 @@ func (r *JobRunner) runAllSteps(ctx context.Context) (messaging.StatusCode, erro
 
 func (r *JobRunner) uploadOutputs() (messaging.StatusCode, error) {
 	var err error
-	composePath := r.cfg.GetString("docker-compose.path")
 	stdout, err := os.Create(path.Join(r.logsDir, "logs-stdout-output"))
 	if err != nil {
 		log.Error(err)
@@ -403,8 +397,8 @@ func (r *JobRunner) uploadOutputs() (messaging.StatusCode, error) {
 		log.Error(err)
 	}
 	defer stderr.Close()
-	outputCommand := exec.Command(
-		composePath,
+	outputCommand := DockerComposeCommand(
+		r.cfg,
 		"-p", r.projectName,
 		"-f", "docker-compose.yml",
 		"up",
@@ -461,8 +455,16 @@ func Run(ctx context.Context, client JobUpdatePublisher, job *model.Job, cfg *vi
 		log.Error(err)
 	}
 
-	composePath := cfg.GetString("docker-compose.path")
-	pullCommand := exec.CommandContext(ctx, composePath, "-p", runner.projectName, "-f", "docker-compose.yml", "pull", "--parallel")
+	pullCommand := DockerComposeCommandContext(
+		cfg,
+		ctx,
+		"-p",
+		runner.projectName,
+		"-f",
+		"docker-compose.yml",
+		"pull",
+		"--parallel",
+	)
 	pullCommand.Env = os.Environ()
 	pullCommand.Dir = runner.workingDir
 	pullCommand.Stdout = logWriter

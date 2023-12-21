@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 
@@ -77,8 +78,6 @@ func main() {
 		cfgPath     = flag.String("config", "", "The path to the config file")
 		writeTo     = flag.String("write-to", "/opt/image-janitor", "The directory to copy job files to.")
 		composePath = flag.String("docker-compose", "docker-compose.yml", "The filepath to use when writing the docker-compose file.")
-		composeBin  = flag.String("docker-compose-path", "/usr/bin/docker-compose", "The path to the docker-compose binary.")
-		dockerBin   = flag.String("docker-path", "/usr/bin/docker", "The path to the docker binary.")
 		dockerCfg   = flag.String("docker-cfg", "/var/lib/condor/.docker", "The path to the .docker directory.")
 		logdriver   = flag.String("log-driver", "de-logging", "The name of the Docker log driver to use in job steps.")
 		pathprefix  = flag.String("path-prefix", "/var/lib/condor", "The path prefix for the stderr/stdout logs.")
@@ -146,8 +145,19 @@ func main() {
 		log.Fatal("--job must be set.")
 	}
 
-	cfg.Set("docker-compose.path", *composeBin)
-	cfg.Set("docker.path", *dockerBin)
+	dockerBinPath, err := exec.LookPath("docker")
+	if err != nil {
+		log.Fatal("no docker executable found in path")
+	}
+
+	dockerComposeBinPath, err := exec.LookPath("docker-compose")
+	if err != nil {
+		log.Info("no docker-compose executable found in path; defaulting to `docker compose`")
+		dockerComposeBinPath = ""
+	}
+
+	cfg.Set("docker-compose.path", dockerComposeBinPath)
+	cfg.Set("docker.path", dockerBinPath)
 	cfg.Set("docker.cfg", *dockerCfg)
 
 	wd, err := os.Getwd()

@@ -12,7 +12,7 @@ ENTRYPOINT ["road-runner"]
 CMD ["--help"]
 
 ARG git_commit=unknown
-ARG version="3.0.0"
+ARG version="3.0.1"
 ARG descriptive_version=unknown
 
 LABEL org.cyverse.git-ref="$git_commit"

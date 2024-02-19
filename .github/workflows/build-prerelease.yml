@@ -7,6 +7,8 @@ jobs:
   pipeline:
     name: Skaffold Docker build
     runs-on: ubuntu-20.04
+    env:
+      GH_API_TOKEN: ${{secrets.GH_API_TOKEN}}
     steps:
     - name: Set Environment
       run: |
@@ -32,23 +34,28 @@ jobs:
         cd "${REPO_NAME}"
         go build .
 
-    - uses: ncipollo/release-action@v1
+    - name: Create Release
+      uses: ncipollo/release-action@v1
+      if: ${{ env.GH_API_TOKEN != '' }}
       with:
         artifacts: "${REPO_NAME}/${EXECUTABLE_NAME}"
         prerelease: true
 
     - name: Pull de-releases
+      if: ${{ env.GH_API_TOKEN != '' }}
       uses: actions/checkout@v4
       with:
         repository: cyverse-de/de-releases
         path: de-releases
 
     - name: Install jq
+      if: ${{ env.GH_API_TOKEN != '' }}
       run: |
         apt-get update
         apt-get install -y jq
 
     - name: Update Release Record
+      if: ${{ env.GH_API_TOKEN != '' }}
       run: |
         cd de-releases
         git config user.name "GitHub Actions Bot"

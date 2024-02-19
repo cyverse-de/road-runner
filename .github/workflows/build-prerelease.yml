@@ -8,17 +8,53 @@ jobs:
     name: Skaffold Docker build
     runs-on: ubuntu-20.04
     steps:
+    - name: Set Environment
+      run: |
+        echo "REPO_NAME=${GITHUB_REPOSITORY/#*\//}" >> "${GITHUB_ENV}"
+        echo "REPO_URI=https://github.com/${GITHUB_REPOSITORY}" >> "${GITHUB_ENV}"
+        echo "EXECUTABLE_NAME=${REPO_NAME}" >> "${GITHUB_ENV}"
+        echo "RELEASE_NAME=${GITHUB_REF_NAME}" >> "${GITHUB_ENV}"
+
     - name: Checkout Repo
       id: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+      with:
+        path: "${REPO_NAME}"
+
     - name: Set up Go Tools
       uses: actions/setup-go@v4
       with:
         go-version: '>=1.21.0'
+
     - name: Build Executable
       run: |
+        export PATH=${GOROOT}/bin:${PATH}
+        cd "${REPO_NAME}"
         go build .
+
     - uses: ncipollo/release-action@v1
       with:
-        artifacts: "road-runner"
+        artifacts: "${REPO_NAME}/${EXECUTABLE_NAME}"
         prerelease: true
+
+    - name: Pull de-releases
+      uses: actions/checkout@v4
+      with:
+        repository: cyverse-de/de-releases
+        path: de-releases
+
+    - name: Install jq
+      run: |
+        apt-get update
+        apt-get install -y jq
+
+    - name: Update Release Record
+      run: |
+        cd de-releases
+        git config user.name "GitHub Actions Bot"
+        git config user.email "<>"
+        mkdir -p deployables
+        echo "{\"repository\":\"${REPO_URI}\",\"release\":\"${RELEASE_NAME}\"}" | jq > "deployables/${REPO_NAME}.json"
+        git add "${DEST}"
+        git commit -m "updated the deployable version for ${REPO_NAME}"
+        git push

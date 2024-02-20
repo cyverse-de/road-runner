@@ -48,6 +48,7 @@ jobs:
       with:
         repository: cyverse-de/de-releases
         path: de-releases
+        token: ${{ env.GH_API_TOKEN }}
 
     - name: Install jq
       if: ${{ env.GH_API_TOKEN != '' }}

@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       GH_API_TOKEN: ${{secrets.GH_API_TOKEN}}
+      GH_DE_RELEASES_PUSH_TOKEN: ${{secrets.GH_DE_RELEASES_PUSH_TOKEN}}
     steps:
     - name: Set Environment
       run: |
@@ -43,19 +44,19 @@ jobs:
         prerelease: true
 
     - name: Pull de-releases
-      if: ${{ env.GH_API_TOKEN != '' }}
+      if: ${{ env.GH_DE_RELEASES_PUSH_TOKEN != '' }}
       uses: actions/checkout@v4
       with:
         repository: cyverse-de/de-releases
         path: de-releases
-        token: ${{ env.GH_API_TOKEN }}
+        token: ${{ env.GH_DE_RELEASES_PUSH_TOKEN }}
 
     - name: Install jq
-      if: ${{ env.GH_API_TOKEN != '' }}
+      if: ${{ env.GH_DE_RELEASES_PUSH_TOKEN != '' }}
       uses: dcarbone/install-jq-action@v2
 
     - name: Update Release Record
-      if: ${{ env.GH_API_TOKEN != '' }}
+      if: ${{ env.GH_DE_RELEASES_PUSH_TOKEN != '' }}
       run: |
         cd de-releases
         git config user.name "GitHub Actions Bot"

@@ -21,12 +21,13 @@ jobs:
       id: checkout
       uses: actions/checkout@v4
       with:
-        path: "${REPO_NAME}"
+        path: "${{env.REPO_NAME}}"
 
     - name: Set up Go Tools
       uses: actions/setup-go@v4
       with:
         go-version: '>=1.21.0'
+        cache-dependency-path: "${{env.REPO_NAME}}/go.sum"
 
     - name: Build Executable
       run: |
@@ -38,7 +39,7 @@ jobs:
       uses: ncipollo/release-action@v1
       if: ${{ env.GH_API_TOKEN != '' }}
       with:
-        artifacts: "${REPO_NAME}/${EXECUTABLE_NAME}"
+        artifacts: "${{ env.REPO_NAME }}/${{ env.EXECUTABLE_NAME }}"
         prerelease: true
 
     - name: Pull de-releases

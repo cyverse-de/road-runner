@@ -51,9 +51,7 @@ jobs:
 
     - name: Install jq
       if: ${{ env.GH_API_TOKEN != '' }}
-      run: |
-        apt-get update
-        apt-get install -y jq
+      uses: dcarbone/install-jq-action@v2
 
     - name: Update Release Record
       if: ${{ env.GH_API_TOKEN != '' }}

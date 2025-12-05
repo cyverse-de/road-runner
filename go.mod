@@ -8,7 +8,7 @@ require (
 	github.com/cyverse-de/model v0.0.0-20211027151045-62de96618208
 	github.com/cyverse-de/version v0.0.0-20200527190517-b40800dcc78b
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.8.3
 	github.com/spf13/viper v1.9.0
 	github.com/streadway/amqp v1.0.0
 	gopkg.in/yaml.v2 v2.4.0
